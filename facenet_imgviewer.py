@@ -15,37 +15,37 @@ import imutils
 import pickle
 
 datst_pt = '/home/ram/Documents/opencv/face-recognition-opencv/dataset'
+#datst_pt = '/home/ram/Documents/opencv/facenet/dataset_clean/dataset_clean'
 face_cascade = cv.CascadeClassifier('lib/haarcascade_frontalface_default.xml')
 
 tf_model = 'lib/20180402-114759.pb'
-clasfier = 'lib/svm_classifier.pkl'
+#clasfier = 'lib/svm_classifier.pkl'
+clasfier = '/home/ram/Documents/opencv/facenet/jun.pkl'
 
-def classify_image(image):
+arr = []
+def classify_image(image,sess,model):
 
-     #im = cv.imread(image)
-     im = imutils.resize(image,160,160)
-     image = np.zeros((1, 160, 160, 3))
-     image[0,:,:,:] = im
+     im = cv.resize(image,(160,160))
+     mean = np.mean(im)
+     st = np.std(im)
+     std_adj = np.maximum(st, 1.0/np.sqrt(im.size))
      
-     feed_dict = { images_placeholder:image, phase_train_placeholder:False }
+     im = np.multiply(np.subtract(im,mean), 1/std_adj)
+     img = np.zeros((1, 160, 160, 3))
+     img[0,:,:,:] = im
+     
+     feed_dict = { images_placeholder:img, phase_train_placeholder:False }
      arr = sess.run(embeddings,feed_dict=feed_dict)
-     
-     with open(clasfier, 'rb') as infile:
-          (model, class_names) = pickle.load(infile)
     
      pred = model.predict(arr)
-     print(pred)
-     # # calculating probabilities
-     # tf_exp = np.exp(tflite_results - np.max(tflite_results))
-     # prob = tf_exp/tf_exp.sum()
-     # # extract text labels
-     # predicted_ids = np.argmax(tflite_results, axis=-1)
-     # # print(prob[0][predicted_ids[0]])
-     # # print(labels[predicted_ids[0]])
-     # return labels[predicted_ids[0]],prob[0][predicted_ids[0]]
-     return 0 , 0
+     pred_pro = model.predict_proba(arr)
+     #return class and confidence
+     return pred[0], pred_pro[0][pred[0]]
 
 # Load TFLite model and allocate tensors.
+with open(clasfier, 'rb') as infile:
+     (model, class_names) = pickle.load(infile)
+
 with tf.compat.v1.Graph().as_default():
  with tf.compat.v1.Session() as sess:
    facenet.load_model(tf_model)
@@ -62,35 +62,40 @@ with tf.compat.v1.Graph().as_default():
           gray = cv.cvtColor(image, cv.COLOR_BGR2RGB)
           
           faces = face_cascade.detectMultiScale(image, 1.1, 4)
+          
+          # name, prob = classify_image(image,sess,model)
+          # print(class_names[name])
+          # print(round(prob,2))
 
           if (len(faces) == 1) :     
                (x,y,w,h) = faces[0,:]
                fac = 0.1
-               #print(x,y,w,h)
+               print(x,y,w,h)
                if ((x-(w*fac))>0) & ((y-(h*fac)>0)):
                     md_x = x-int(w*fac)
                     md_y = y-int(h*fac)
                     md_w = w+int((w*fac)*2)
                     md_h = h+int((h*fac)*2)
 
-                    #print(md_x,md_y,md_w,md_h)
+                    print(md_x,md_y,md_w,md_h)
                     cr_image = image[md_y:md_y+md_h,md_x:md_x+md_w]
                     cv.rectangle(image,(md_x,md_y),(md_x+md_w,md_y+md_h),(0,255,0),2)
                     x,y,_ = cr_image.shape
-                    # print(x,y)
+                    print(x,y)
                     # print(cr_image.shape)
-                    name, prob = classify_image(cr_image)
-                              
-                    # prob = str(round(prob,2))
+                    name, prob = classify_image(image,sess,model)
+                    name = class_names[name]
+                    prob = str(round(prob,2))
+
                     # print(name,prob)
-                    image = cr_image
+                    # image = cr_image
                     
-               # print infomation on the image
-               cv.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
-               # cv.putText(image, name,\
-               #         (x, y), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
-               # cv.putText(image, prob,\
-               #         (x, y+h), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+                    # print infomation on the image
+                    cv.rectangle(image,(x,y),(x+w,y+h),(255,0,0),2)
+                    cv.putText(image, name,\
+                             (x, y), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+                    cv.putText(image, prob,\
+                             (x, y+h), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
                
           image = cv.resize(image,(512,512))
           cv.imshow("Image", image)
