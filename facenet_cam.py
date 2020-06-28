@@ -26,8 +26,32 @@ if not cap.isOpened():
 face_cascade = cv.CascadeClassifier('lib/haarcascade_frontalface_default.xml')
 eye_cascade = cv.CascadeClassifier('lib/haarcascade_eye.xml')
 
-tf_model = 'lib/20180402-114759.pb'
-clasfier = '/home/ram/Documents/opencv/facenet/jun.pkl'
+tf_model = 'lib/xception_81.tflite'
+clasfier = '/home/ram/Documents/opencv/facenet/fac.pkl'
+
+# def classify_image(image,modl,labels):
+#      # Load TFLite model and allocate tensors.
+#      interpreter = tf.lite.Interpreter(model_path=modl)
+#      interpreter.allocate_tensors()
+
+#      # Get input and output tensors.
+#      input_details = interpreter.get_input_details()
+#      output_details = interpreter.get_output_details()
+
+#      outpt = cv.resize(image,(299,299))/255.0
+#      outpt = np.array(outpt,dtype=np.float32)
+#      interpreter.set_tensor(input_details[0]['index'], [outpt])
+#      interpreter.invoke()
+
+#      # Use `tensor()` in order to get a pointer to the tensor.
+#      tflite_results = interpreter.get_tensor(output_details[0]['index'])
+#      # calculating probabilities
+#      tf_exp = np.exp(tflite_results - np.max(tflite_results))
+#      prob = tf_exp/tf_exp.sum()
+#      # extract text labels
+#      predicted_ids = np.argmax(tflite_results, axis=-1)
+
+#      return labels[predicted_ids[0]],prob[0][predicted_ids[0]]
 
 def classify_image(image,sess,model):
   im = cv.resize(image,(160,160))

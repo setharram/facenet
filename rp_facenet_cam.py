@@ -31,12 +31,13 @@ face_cascade = cv.CascadeClassifier('lib/haarcascade_frontalface_default.xml')
 eye_cascade = cv.CascadeClassifier('lib/haarcascade_eye.xml')
 
 svm_model = 'lib/fac.pkl'
-tf_model = 'lib/facenet_6.tflite'
+tf_model = 'lib/mobilenet_81.tflite'
 
 def stad(im):
   mean = np.mean(im)
-  st = np.std(im)
-  std_adj = np.maximum(st, 1.0/np.sqrt(im.size))
+  #st = np.std(im)
+  std_adj = np.std(im)
+  #std_adj = np.maximum(st, 1.0/np.sqrt(im.size))
   im = np.multiply(np.subtract(im,mean), 1/std_adj)
   return im
 
@@ -54,9 +55,9 @@ def classify_image(image,model,clasify,labels):
      
      input_details = model.get_input_details()
      output_details = model.get_output_details()
-     # standardize input image 
-     image = stad(image)
+     # standardize input image
      tf_input = cv.resize(image,(224,224))/255.0
+     #image = stad(image)
      tf_input = np.array(tf_input,dtype=np.float32)
      model.set_tensor(input_details[0]['index'], [tf_input])
      model.invoke()
@@ -65,14 +66,14 @@ def classify_image(image,model,clasify,labels):
      
      cls_out = clasify.predict_proba(pred)
      # calculating probabilities
-     cls_pro = np.exp(cls_out - np.max(cls_out))
-     prob = cls_pro/cls_pro.sum()
+     # cls_pro = np.exp(cls_out - np.max(cls_out))
+     # prob = cls_pro/cls_pro.sum()
      # extract text labels
      predicted_ids = np.argmax(cls_out, axis=-1)
 
-     return labels[predicted_ids[0]],prob[0][predicted_ids[0]]
+     return labels[predicted_ids[0]],round(cls_out[0][predicted_ids[0]],2)
 
-fac = 0.1
+fac = 0.2
 model,cls_model,classname = init_model(tf_model,svm_model)
 
 while True:
@@ -106,22 +107,24 @@ while True:
               
               name,prob = classify_image(tf_image, model, \
                               cls_model, classname)
-                   
-              sprob = str(round(prob,2))
-              name = str(name)
+              sprob = str(prob)
               print(name,sprob)
               
-             else:
-                  prob = 0.2
-
-             eyes = eye_cascade.detectMultiScale(roi_gray)
-             for (ex,ey,ew,eh) in eyes:
+              eyes = eye_cascade.detectMultiScale(roi_gray)
+              for (ex,ey,ew,eh) in eyes:
                   cv.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
-             if prob > 0.7:
+              if prob > 0.55:
                 cv.putText(image, name,\
                      (x, y), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
                 cv.putText(image, sprob,\
                      (x, y+h), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+             
+              image = tf_image
+             else:
+                  prob = 0.2
+                  #display text
+
+             
     # Display the resulting frame
     cv.imshow('face detection', image)
     if cv.waitKey(200) == ord('q'):
