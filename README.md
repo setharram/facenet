@@ -1,7 +1,7 @@
 # Facenet
 In this project I'm try to build low computational human face detection and recognition algorithm on raspberry pi <br/>
 using opencv and Tensorflow lite for Embedded systems<br/> <br/>
-Appilication inspired by Facenet architecture using embedding https://arxiv.org/abs/1503.03832 <br/>
+Application inspired by Facenet architecture using embedding https://arxiv.org/abs/1503.03832 <br/>
 Currently experimenting on <br/>
 Classifiers <br/>
   Open cv "haarcascade_frontalface_default" and "haarcascade_eye" classifier <br/><br/>
