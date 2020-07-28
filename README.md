@@ -1,5 +1,5 @@
-# facenet
-In this project I'm try to build low computational face detection and recognition algorithm on raspberry pi <br/>
+# Facenet
+In this project I'm try to build low computational human face detection and recognition algorithm on raspberry pi <br/>
 using opencv and Tensorflow lite for Embedded systems<br/> <br/>
 Appilication inspired by Facenet architecture using embedding https://arxiv.org/abs/1503.03832 <br/>
 Currently experimenting on <br/>
